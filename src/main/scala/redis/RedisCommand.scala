@@ -80,16 +80,16 @@ trait RedisCommandMultiBulkSeqByteStringDouble[R] extends RedisCommandMultiBulk[
   def decodeReply(mb: MultiBulk) = MultiBulkConverter.toSeqTuple2ByteStringDouble(mb)(deserializer)
 }
 
-case class Cursor[T](index: Int, data: T)
+case class Cursor[T](index: Long, data: T)
 
 trait RedisCommandMultiBulkCursor[R] extends RedisCommandMultiBulk[Cursor[R]] {
   def decodeReply(mb: MultiBulk) = {
     mb.responses.map { responses =>
-      val cursor = ParseNumber.parseInt(responses.head.toByteString)
+      val cursor = ParseNumber.parseLong(responses.head.toByteString)
       val remainder = responses(1).asInstanceOf[MultiBulk]
 
       Cursor(cursor, remainder.responses.map(decodeResponses).getOrElse(empty))
-    }.getOrElse(Cursor(0, empty))
+    }.getOrElse(Cursor(0L, empty))
   }
 
   def decodeResponses(responses: Seq[RedisReply]): R
